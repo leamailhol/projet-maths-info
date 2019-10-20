@@ -1,0 +1,11 @@
+def simple_contour(f,c=0,delta=0,01):
+    x=[k*delta for k in range(101)]
+    y=[]
+    for k in range(101):
+        def g(t):
+            return f(x[k],t) # recherche du zéro de f à abscisse fixée
+        y.append(find_seed(g))
+    if None in y:
+        print([],[])
+    else:
+        print x,y
