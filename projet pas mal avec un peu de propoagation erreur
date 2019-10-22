@@ -1,0 +1,139 @@
+import autograd.numpy as np
+import matplotlib.pyplot as plt
+import autograd 
+
+def f(x,y):
+    return np.exp(-x**2-y**2)
+
+def g(x,y):
+    return np.exp(-(x-1)**2-(y-1)**2)
+
+def h(x,y):
+    return 2*(f(x,y)-g(x,y))
+
+
+def find_seed(g,inf,sup,c=0,eps=2**(-26)):
+    if (g(inf)-c)*(g(sup)-c)>0:
+        return None
+    else:
+        deb=inf
+        fin=sup
+        m=(deb+fin)/2
+        if g(inf)>=g(sup):
+            dec=True
+        else :
+            dec=False
+        while np.abs((g(m)-c))>eps:
+            if g(m)>c:
+                if dec:
+                    deb=m
+                else:
+                    fin=m
+            elif g(m)<c:
+                if dec:
+                    fin=m
+                else:
+                    deb=m
+            m=(deb+fin)/2
+        return m
+
+def simple_contour_gauche2(f,absinf,abssup,ordinf,ordsup,c=0,delta=0.01):
+    x=[absinf]
+    def g(t):
+        return f(absinf,t)
+    y=[find_seed(g,ordinf,ordsup,c)]
+    i=0
+    if y==[None]:
+        return [],[]
+    while x[i]>=absinf and x[i]<=abssup and y[i]>=ordinf and y[i]<=ordsup:
+        grad=np.array([autograd.grad(f,0)(x[i],y[i]),autograd.grad(f,1)(x[i],y[i])])
+        print(np.shape(grad))
+        ortho=np.array([-grad[1],grad[0]])
+        orthonorm=ortho/(np.sqrt(ortho[0]**2+ortho[1]**2))
+        new=np.array([x[i],y[i]])+delta*orthonorm
+        x.append(new[0])
+        y.append(new[1])
+        i+=1
+    return x,y
+
+def simple_contour_droite2(f,absinf,abssup,ordinf,ordsup,c=0,delta=0.01):
+    x=[abssup]
+    def g(t):
+        return f(abssup,t)
+    y=[find_seed(g,ordinf,ordsup,c)]
+    i=0
+    if y==[None]:
+        return [],[]
+    while x[i]>=absinf and x[i]<=abssup and y[i]>=ordinf and y[i]<=ordsup:
+        print(type(x[i]))
+        grad=np.array([autograd.grad(f,0)(x[i],y[i]),autograd.grad(f,1)(x[i],y[i])])
+        ortho=np.array([-grad[1],grad[0]])
+        orthonorm=ortho/(np.sqrt(ortho[0]**2+ortho[1]**2))
+        new=np.array([x[i],y[i]])+delta*orthonorm
+        x.append(new[0])
+        y.append(new[1])
+        i+=1
+    return x,y
+
+def simple_contour_bas2(f,absinf,abssup,ordinf,ordsup,c=0,delta=0.01):
+    def g(t):
+        return f(t,ordinf)
+    x=[find_seed(g,absinf,abssup,c)]
+    y=[ordinf]
+    i=0
+    if x==[None]:
+        return [],[]
+    while x[i]>=absinf and x[i]<=abssup and y[i]>=ordinf and y[i]<=ordsup:
+        grad=np.array([autograd.grad(f,0)(x[i],y[i]),autograd.grad(f,1)(x[i],y[i])])
+        ortho=np.array([-grad[1],grad[0]])
+        orthonorm=ortho/(np.sqrt(ortho[0]**2+ortho[1]**2))
+        new=np.array([x[i],y[i]])+delta*orthonorm
+        x.append(new[0])
+        y.append(new[1])
+        i+=1
+    return x,y
+
+def simple_contour_haut2(f,absinf,abssup,ordinf,ordsup,c=0,delta=0.01):
+    def g(t):
+        return f(t,ordsup)
+    x=[find_seed(g,absinf,abssup,c)]
+    y=[ordsup]
+    i=0
+    if x==[None]:
+        return [],[]
+    while x[i]>=absinf and x[i]<=abssup and y[i]>=ordinf and y[i]<=ordsup:
+        grad=np.array([autograd.grad(f,0)(x[i],y[i]),autograd.grad(f,1)(x[i],y[i])])
+        ortho=np.array([-grad[1],grad[0]])
+        orthonorm=ortho/(np.sqrt(ortho[0]**2+ortho[1]**2))
+        new=np.array([x[i],y[i]])+delta*orthonorm
+        x.append(new[0])
+        y.append(new[1])
+        i+=1
+    return x,y
+
+def contour(f,c=0.0,xc=[0.0,1.0],yc=[0.0,1.0],delta=0.01):
+    xs=[]
+    ys=[]
+    for i in range(len(xc)-1):
+        for j in range(len(yc)-1):
+            a,b=simple_contour_gauche2(f,xc[i],xc[i+1],yc[j],yc[j+1],c,delta)
+            xs.append(a)
+            ys.append(b)
+            a,b=simple_contour_droite2(f,xc[i],xc[i+1],yc[j],yc[j+1],c,delta)
+            xs.append(a)
+            ys.append(b)
+            a,b=simple_contour_haut2(f,xc[i],xc[i+1],yc[j],yc[j+1],c,delta)
+            xs.append(a)
+            ys.append(b)
+            a,b=simple_contour_bas2(f,xc[i],xc[i+1],yc[j],yc[j+1],c,delta)
+            xs.append(a)
+            ys.append(b)
+    return xs,ys
+
+
+
+for c in [-1,-0.5,0,0.5,1]:
+    xs, ys=contour(h,c,[-2.,0.,1.,2.,3.],[-2.,0.,1.,2.,3.])
+    for x,y in zip(xs,ys):
+            plt.plot(x,y)
+plt.show()
